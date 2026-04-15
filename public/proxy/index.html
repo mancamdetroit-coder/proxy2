@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hamshchos Proxy</title>
+  <style>
+    body { font-family: system-ui; background:#0f0f0f; color:white; text-align:center; padding:100px 20px; }
+    h1 { font-size: 3rem; }
+    form { max-width:700px; margin:40px auto; display:flex; gap:10px; }
+    input { flex:1; padding:18px; font-size:1.2rem; border-radius:12px; background:#222; color:white; border:none; }
+    button { padding:18px 40px; background:#00ff9d; color:black; font-weight:bold; border:none; border-radius:12px; }
+  </style>
+</head>
+<body>
+  <h1>🚀 Hamshchos Proxy</h1>
+  <p>Unblock any website</p>
+
+  <form action="/proxy" method="get">
+    <input type="text" name="url" placeholder="youtube.com" required>
+    <button type="submit">Go →</button>
+  </form>
+
+  <div style="margin-top:40px;">
+    <button onclick="location.href='/proxy/youtube.com'">YouTube</button>
+    <button onclick="location.href='/proxy/instagram.com'">Instagram</button>
+    <button onclick="location.href='/proxy/twitter.com'">X</button>
+  </div>
+</body>
+</html>
