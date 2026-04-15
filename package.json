@@ -1,7 +1,7 @@
 {
   "name": "hamshchos-proxy",
   "version": "1.0.0",
-  "description": "Simple web proxy like BlockAway",
+  "description": "Hamshchos Proxy + Multi-page site",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
