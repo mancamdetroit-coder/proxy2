@@ -1,15 +1,15 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve all static files from public folder
+// Serve ALL files from public folder (this handles homepage + all new pages)
 app.use(express.static('public'));
 
 // ======================
-// PROXY ROUTE
-// ======================
+// PROXY ROUTE (only this part handles proxying)
 app.use('/proxy', async (req, res) => {
   try {
     let target = req.query.url || req.path.slice(1);
@@ -26,7 +26,6 @@ app.use('/proxy', async (req, res) => {
 
     let body = await response.text();
 
-    // Basic link rewriting
     const base = '/proxy/';
     body = body.replace(/(href|src|action)=["']([^"']+)["']/gi, (match, attr, url) => {
       if (url.startsWith('http') || url.startsWith('//')) {
@@ -38,27 +37,21 @@ app.use('/proxy', async (req, res) => {
 
     res.send(body);
   } catch (err) {
-    res.status(500).send(`
-      <h1>Proxy Error</h1>
-      <p>${err.message}</p>
-      <a href="/proxy/">← Back to Proxy</a>
-    `);
+    res.status(500).send(`<h1>Proxy Error</h1><p>${err.message}</p><a href="/proxy/">← Back to Proxy</a>`);
   }
 });
 
 // ======================
-// Catch-all route → serve index.html from correct folder
-// ======================
+// For /proxy exactly → serve the proxy index.html
+app.get('/proxy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'proxy', 'index.html'));
+});
+
+// Catch-all: any other page (/, /about, /games, etc.) → serve from public folder
 app.get('*', (req, res) => {
-  // If user visits /proxy → serve public/proxy/index.html
-  if (req.path === '/proxy' || req.path === '/proxy/') {
-    return res.sendFile(path.join(__dirname, 'public', 'proxy', 'index.html'));
-  }
-  
-  // Otherwise serve from public root (homepage, about, etc.)
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Hamshchos site running on port ${PORT}`);
 });
