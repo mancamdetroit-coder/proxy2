@@ -3,14 +3,18 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve a nice landing page at /
+// Serve the nice landing page from public folder
 app.use(express.static('public'));
 
-// Proxy route: /proxy/https://example.com or /proxy?url=https://example.com
+// Main proxy route
 app.use('/proxy', async (req, res) => {
   try {
-    let target = req.query.url || req.path.slice(1); // remove leading /
-    if (!target.startsWith('http')) target = 'https://' + target;
+    let target = req.query.url || req.path.slice(1);
+    if (!target) return res.status(400).send('No URL provided');
+
+    if (!target.startsWith('http')) {
+      target = 'https://' + target;
+    }
 
     const response = await fetch(target, {
       headers: {
@@ -23,21 +27,28 @@ app.use('/proxy', async (req, res) => {
 
     let body = await response.text();
 
-    // Basic rewriting so links stay inside the proxy
+    // Basic link rewriting
     const base = '/proxy/';
     body = body.replace(/(href|src|action)=["']([^"']+)["']/gi, (match, attr, url) => {
       if (url.startsWith('http') || url.startsWith('//')) {
-        return `${attr}="${base}${url.replace(/^https?:\/\//, '')}"`;
+        const cleanUrl = url.replace(/^https?:\/\//, '');
+        return `${attr}="${base}${cleanUrl}"`;
       }
       return match;
     });
 
     res.send(body);
   } catch (err) {
-    res.status(500).send(`<h1>Proxy Error</h1><p>${err.message}</p><p>Try a different site or check the URL.</p>`);
+    console.error(err);
+    res.status(500).send(`
+      <h1>Proxy Error</h1>
+      <p>${err.message}</p>
+      <p>Try a different site or check the URL.</p>
+      <a href="/">← Back to Home</a>
+    `);
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Proxy running on port ${PORT}`);
+  console.log(`✅ Hamshchos Proxy running on port ${PORT}`);
 });
