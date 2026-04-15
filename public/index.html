@@ -3,176 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hamshchos - Unblock & More</title>
+  <title>Hamshchos</title>
   <style>
-    :root {
-      --primary: #00ff9d;
-    }
-    * {
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #ddd;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
-      color: white;
       min-height: 100vh;
-      line-height: 1.6;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-    header {
-      padding: 30px 0;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-    }
-    .logo {
-      font-size: 2rem;
-      font-weight: bold;
-      color: var(--primary);
-    }
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin-left: 30px;
-      font-weight: 500;
-    }
-    nav a:hover {
-      color: var(--primary);
-    }
-
-    .hero {
+      justify-content: center;
       text-align: center;
-      padding: 120px 0 80px;
     }
-    .hero h1 {
-      font-size: 4.5rem;
-      margin-bottom: 20px;
-      background: linear-gradient(90deg, #00ff9d, #00cc77);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p {
-      font-size: 1.4rem;
-      color: #bbb;
+    .content {
       max-width: 600px;
-      margin: 0 auto 40px;
+      padding: 40px;
     }
-    .btn {
-      display: inline-block;
-      padding: 16px 40px;
+    h1 {
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      color: #00ff9d;
+    }
+    p {
       font-size: 1.2rem;
-      font-weight: bold;
-      border-radius: 12px;
-      text-decoration: none;
-      transition: all 0.3s;
+      color: #888;
+      margin-bottom: 40px;
     }
-    .btn-primary {
-      background: var(--primary);
-      color: black;
-      margin-right: 15px;
-    }
-    .btn-primary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 20px rgba(0, 255, 157, 0.3);
-    }
-    .btn-secondary {
-      background: transparent;
-      color: white;
-      border: 2px solid #00ff9d;
-    }
-    .btn-secondary:hover {
-      background: #00ff9d;
-      color: black;
-    }
-
-    .features {
-      padding: 80px 0;
-      background: rgba(0,0,0,0.3);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 30px;
-    }
-    .card {
-      background: #1a1a2e;
-      padding: 30px;
-      border-radius: 16px;
-      text-align: center;
-      transition: transform 0.3s;
-    }
-    .card:hover {
-      transform: translateY(-10px);
-    }
-    .card h3 {
-      color: var(--primary);
-      margin: 15px 0;
-    }
-
-    footer {
-      text-align: center;
-      padding: 40px 0;
-      color: #666;
+    .secret {
       font-size: 0.9rem;
+      color: #444;
+      margin-top: 60px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header>
-      <div class="logo">Hamshchos</div>
-      <nav>
-        <a href="/">Home</a>
-        <a href="/proxy">Proxy</a>
-        <a href="/about">About</a>
-        <!-- Add more links later -->
-      </nav>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="hero">
-      <h1>Unblock Everything</h1>
-      <p>Fast web proxy • Free • No signup • Works with YouTube, Instagram, TikTok, Reddit and more</p>
-      
-      <div>
-        <a href="/proxy" class="btn btn-primary">🚀 Open Proxy Now</a>
-        <a href="#features" class="btn btn-secondary">Learn More</a>
-      </div>
-    </section>
-
-    <!-- Features -->
-    <section id="features" class="features">
-      <div class="container">
-        <h2 style="text-align:center; font-size:2.5rem; margin-bottom:50px;">Why Hamshchos?</h2>
-        <div class="grid">
-          <div class="card">
-            <h3>⚡ Fast & Reliable</h3>
-            <p>Powered by a real backend. Faster than most free proxies.</p>
-          </div>
-          <div class="card">
-            <h3>🔓 Unblock Anything</h3>
-            <p>YouTube, social media, news, games — all work smoothly.</p>
-          </div>
-          <div class="card">
-            <h3>📁 Growing Site</h3>
-            <p>Proxy today, games, tools, and more coming soon.</p>
-          </div>
-        </div>
-      </div>
-    </section>
+  <div class="content">
+    <h1>Hamshchos</h1>
+    <p>Personal toolbox</p>
+    
+    <!-- You can add other tools here later -->
+    
+    <div class="secret">
+      Secret tools are hidden.<br>
+      Only I know where they are.
+    </div>
   </div>
-
-  <footer>
-    Made with ❤️ for free internet • 
-    <a href="/proxy" style="color:#00ff9d;">Proxy</a> • 
-    <a href="#" style="color:#00ff9d;">GitHub</a>
-  </footer>
 </body>
 </html>
