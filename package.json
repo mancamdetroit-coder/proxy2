@@ -1,0 +1,16 @@
+{
+  "name": "hamshchos-proxy",
+  "version": "1.0.0",
+  "description": "Simple web proxy like BlockAway",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
