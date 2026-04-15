@@ -3,33 +3,176 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hamshchos Proxy</title>
+  <title>Hamshchos - Unblock & More</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #fff; text-align: center; padding: 80px 20px; }
-    h1 { font-size: 3rem; margin-bottom: 10px; }
-    p { font-size: 1.2rem; color: #aaa; }
-    form { max-width: 700px; margin: 40px auto; display: flex; gap: 10px; }
-    input { flex: 1; padding: 18px; font-size: 1.1rem; border-radius: 12px; border: none; background: #222; color: white; }
-    button { padding: 18px 40px; font-size: 1.1rem; background: #00ff9d; color: #000; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; }
-    .quick { margin-top: 30px; }
-    .quick button { margin: 8px; padding: 10px 20px; background: #333; color: #fff; border: none; border-radius: 8px; }
+    :root {
+      --primary: #00ff9d;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+      color: white;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    header {
+      padding: 30px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-left: 30px;
+      font-weight: 500;
+    }
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    .hero {
+      text-align: center;
+      padding: 120px 0 80px;
+    }
+    .hero h1 {
+      font-size: 4.5rem;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #00ff9d, #00cc77);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.4rem;
+      color: #bbb;
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 16px 40px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: black;
+      margin-right: 15px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0, 255, 157, 0.3);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid #00ff9d;
+    }
+    .btn-secondary:hover {
+      background: #00ff9d;
+      color: black;
+    }
+
+    .features {
+      padding: 80px 0;
+      background: rgba(0,0,0,0.3);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+    .card {
+      background: #1a1a2e;
+      padding: 30px;
+      border-radius: 16px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-10px);
+    }
+    .card h3 {
+      color: var(--primary);
+      margin: 15px 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
-  <h1>🚀 Hamshchos Proxy</h1>
-  <p>Unblock any website • Fast & Simple</p>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo">Hamshchos</div>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/proxy">Proxy</a>
+        <a href="/about">About</a>
+        <!-- Add more links later -->
+      </nav>
+    </header>
 
-  <form action="/proxy" method="get">
-    <input type="text" name="url" placeholder="https://youtube.com or just youtube.com" autocomplete="off" required>
-    <button type="submit">Go →</button>
-  </form>
+    <!-- Hero Section -->
+    <section class="hero">
+      <h1>Unblock Everything</h1>
+      <p>Fast web proxy • Free • No signup • Works with YouTube, Instagram, TikTok, Reddit and more</p>
+      
+      <div>
+        <a href="/proxy" class="btn btn-primary">🚀 Open Proxy Now</a>
+        <a href="#features" class="btn btn-secondary">Learn More</a>
+      </div>
+    </section>
 
-  <div class="quick">
-    <button onclick="window.location='/proxy/youtube.com'">YouTube</button>
-    <button onclick="window.location='/proxy/instagram.com'">Instagram</button>
-    <button onclick="window.location='/proxy/twitter.com'">X / Twitter</button>
-    <button onclick="window.location='/proxy/tiktok.com'">TikTok</button>
-    <button onclick="window.location='/proxy/reddit.com'">Reddit</button>
+    <!-- Features -->
+    <section id="features" class="features">
+      <div class="container">
+        <h2 style="text-align:center; font-size:2.5rem; margin-bottom:50px;">Why Hamshchos?</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>⚡ Fast & Reliable</h3>
+            <p>Powered by a real backend. Faster than most free proxies.</p>
+          </div>
+          <div class="card">
+            <h3>🔓 Unblock Anything</h3>
+            <p>YouTube, social media, news, games — all work smoothly.</p>
+          </div>
+          <div class="card">
+            <h3>📁 Growing Site</h3>
+            <p>Proxy today, games, tools, and more coming soon.</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
+
+  <footer>
+    Made with ❤️ for free internet • 
+    <a href="/proxy" style="color:#00ff9d;">Proxy</a> • 
+    <a href="#" style="color:#00ff9d;">GitHub</a>
+  </footer>
 </body>
 </html>
