@@ -10,9 +10,9 @@ router.use(async (req, res) => {
       return res.redirect('/proxy/');
     }
 
-    // Problem 4: If it's not a valid URL → auto search on Google
+    // Auto Google search if no valid domain
     if (!target.startsWith('http') && !target.includes('.')) {
-      target = 'https://www.google.com/search?q=' + encodeURIComponent(target);
+      target = `https://www.google.com/search?q=${encodeURIComponent(target)}`;
     } else if (!target.startsWith('http')) {
       target = 'https://' + target;
     }
@@ -25,47 +25,54 @@ router.use(async (req, res) => {
       }
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const contentType = response.headers.get('content-type') || 'text/html';
     res.set('Content-Type', contentType);
 
     let body = await response.text();
 
-    // Much better rewriting for images, CSS, JS, videos, etc.
+    // Base for rewriting
     const base = '/proxy/';
-    body = body.replace(/(href|src|action|data-src|data-original|poster|srcset)=["']([^"']+)["']/gi, (match, attr, url) => {
-      if (url.startsWith('data:') || url.startsWith('#') || url.startsWith('javascript:') || url.startsWith('blob:')) {
+
+    // Improved rewriting for images, links, scripts, etc.
+    body = body.replace(/(href|src|action|data-src|data-original|poster|srcset)=["']([^"']*)["']/gi, (match, attr, url) => {
+      if (!url || url.startsWith('data:') || url.startsWith('#') || url.startsWith('javascript:') || url.startsWith('blob:')) {
         return match;
       }
 
-      if (url.startsWith('http') || url.startsWith('//')) {
-        const clean = url.replace(/^https?:\/\//, '');
-        return `${attr}="${base}${clean}"`;
-      }
+      try {
+        // Full absolute URL
+        if (url.startsWith('http') || url.startsWith('//')) {
+          const clean = url.replace(/^https?:\/\//, '');
+          return `${attr}="${base}${clean}"`;
+        }
 
-      // Handle relative URLs (very important for images and sub-resources)
-      if (url.startsWith('/')) {
-        const origin = new URL(target).origin;
-        const clean = origin.replace(/^https?:\/\//, '') + url;
-        return `${attr}="${base}${clean}"`;
-      }
+        // Relative URL starting with /
+        if (url.startsWith('/')) {
+          const origin = new URL(target).origin.replace(/^https?:\/\//, '');
+          return `${attr}="${base}${origin}${url}"`;
+        }
 
-      return match;
+        // Other relative URLs
+        const origin = new URL(target).origin.replace(/^https?:\/\//, '');
+        return `${attr}="${base}${origin}/${url}"`;
+      } catch (e) {
+        return match;
+      }
     });
 
-    // Also rewrite srcset (common for responsive images)
-    body = body.replace(/srcset=["']([^"']+)["']/gi, (match, srcset) => {
+    // Fix srcset (important for images on many sites)
+    body = body.replace(/srcset="([^"]*)"/gi, (match, srcset) => {
       const newSrcset = srcset.split(',').map(item => {
-        const parts = item.trim().split(' ');
-        if (parts[0].startsWith('http') || parts[0].startsWith('//')) {
-          const clean = parts[0].replace(/^https?:\/\//, '');
+        const parts = item.trim().split(/\s+/);
+        let urlPart = parts[0];
+        if (urlPart.startsWith('http') || urlPart.startsWith('//')) {
+          const clean = urlPart.replace(/^https?:\/\//, '');
           parts[0] = base + clean;
-        } else if (parts[0].startsWith('/')) {
+        } else if (urlPart.startsWith('/')) {
           const origin = new URL(target).origin.replace(/^https?:\/\//, '');
-          parts[0] = base + origin + parts[0];
+          parts[0] = base + origin + urlPart;
         }
         return parts.join(' ');
       }).join(', ');
@@ -79,7 +86,7 @@ router.use(async (req, res) => {
     res.status(500).send(`
       <h1>Proxy Error</h1>
       <p>Could not load the page: ${err.message}</p>
-      <a href="/proxy/">← Back to Proxy</a>
+      <p><a href="/proxy/">← Back to Proxy</a></p>
     `);
   }
 });
