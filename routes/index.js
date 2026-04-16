@@ -2,18 +2,26 @@ const express = require('express');
 const path = require('path');
 const router = express.Router();
 
-// Import routes
+const { requirePageAccess } = require('../middleware/auth');
 const proxyRoutes = require('./proxy');
+const authRoutes = require('./auth');
+const adminRoutes = require('./admin');
 
-// Mount routes
-router.use('/proxy', proxyRoutes);
+// Auth routes (login/logout)
+router.use('/', authRoutes);
 
-// Homepage - serve blank minimal page
+// Admin routes
+router.use('/admin', adminRoutes);
+
+// Proxy — protected by page access
+router.use('/proxy', requirePageAccess('/proxy'), proxyRoutes);
+
+// Homepage — public
 router.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
-// Catch-all for other pages (in case you add more later)
+// Catch-all
 router.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
