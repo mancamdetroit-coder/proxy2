@@ -125,7 +125,7 @@
       <input 
         type="text" 
         id="urlInput" 
-        placeholder="type a link  or  just type anything to search Google"
+        placeholder="youtube.com  or  cat memes  or  any search"
         autocomplete="off"
         required>
       <button type="submit">Go →</button>
@@ -144,25 +144,12 @@
   </footer>
 
   <script>
-    function goTo(site) {
-      window.location.href = '/proxy/' + site;
-    }
-
-    // Handle form submit with clean URL (no ?url=)
     document.getElementById('proxyForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const input = document.getElementById('urlInput').value.trim();
-      
+      let input = document.getElementById('urlInput').value.trim();
       if (input) {
-        // If it looks like a search query (no dot and no http), it will be handled in backend
+        // Force clean path URL
         window.location.href = '/proxy/' + encodeURIComponent(input);
-      }
-    });
-
-    // Allow pressing Enter in input
-    document.getElementById('urlInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        document.getElementById('proxyForm').dispatchEvent(new Event('submit'));
       }
     });
   </script>
