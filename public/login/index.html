@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – Hamshchos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #00ff9d;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .tagline {
+      text-align: center;
+      color: #555;
+      font-size: 0.9rem;
+      margin-bottom: 36px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 14px 16px;
+      background: #1a1a1a;
+      border: 1.5px solid #2a2a2a;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+    }
+    input:focus { border-color: #00ff9d; }
+    button[type="submit"] {
+      width: 100%;
+      padding: 15px;
+      background: #00ff9d;
+      color: #000;
+      font-weight: bold;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button[type="submit"]:hover { background: #00cc7a; transform: translateY(-1px); }
+    .error {
+      background: #2a0a0a;
+      border: 1px solid #ff4444;
+      color: #ff6666;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .error.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Hamshchos</div>
+    <div class="tagline">Sign in to continue</div>
+
+    <div class="error" id="errorBox"></div>
+
+    <form method="POST" action="/login">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" required autofocus>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required>
+
+      <button type="submit">Sign In →</button>
+    </form>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    const box = document.getElementById('errorBox');
+    if (err === 'invalid') {
+      box.textContent = 'Invalid username or password.';
+      box.classList.add('show');
+    } else if (err === 'missing') {
+      box.textContent = 'Please enter your username and password.';
+      box.classList.add('show');
+    }
+  </script>
+</body>
+</html>
