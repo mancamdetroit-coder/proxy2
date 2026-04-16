@@ -10,7 +10,7 @@ router.use(async (req, res) => {
       return res.redirect('/proxy/');
     }
 
-    // Auto Google search if no valid domain
+    // Auto Google search if it doesn't look like a domain
     if (!target.startsWith('http') && !target.includes('.')) {
       target = `https://www.google.com/search?q=${encodeURIComponent(target)}`;
     } else if (!target.startsWith('http')) {
@@ -32,51 +32,63 @@ router.use(async (req, res) => {
 
     let body = await response.text();
 
-    // Base for rewriting
     const base = '/proxy/';
 
-    // Improved rewriting for images, links, scripts, etc.
-    body = body.replace(/(href|src|action|data-src|data-original|poster|srcset)=["']([^"']*)["']/gi, (match, attr, url) => {
-      if (!url || url.startsWith('data:') || url.startsWith('#') || url.startsWith('javascript:') || url.startsWith('blob:')) {
+    // Stronger rewriting for links, images, scripts, etc.
+    body = body.replace(/(href|src|action|data-src|data-original|poster|srcset)=(["'])(.*?)\2/gi, (match, attr, quote, url) => {
+      if (!url || url.startsWith('data:') || url.startsWith('#') || url.startsWith('javascript:') || url.startsWith('blob:') || url.startsWith('tel:') || url.startsWith('mailto:')) {
         return match;
       }
 
       try {
-        // Full absolute URL
+        let fullUrl;
         if (url.startsWith('http') || url.startsWith('//')) {
-          const clean = url.replace(/^https?:\/\//, '');
-          return `${attr}="${base}${clean}"`;
+          fullUrl = url.startsWith('//') ? 'https:' + url : url;
+        } else if (url.startsWith('/')) {
+          // Relative root path
+          const origin = new URL(target).origin;
+          fullUrl = origin + url;
+        } else {
+          // Other relative paths
+          const origin = new URL(target).origin;
+          fullUrl = origin + '/' + url;
         }
 
-        // Relative URL starting with /
-        if (url.startsWith('/')) {
-          const origin = new URL(target).origin.replace(/^https?:\/\//, '');
-          return `${attr}="${base}${origin}${url}"`;
-        }
-
-        // Other relative URLs
-        const origin = new URL(target).origin.replace(/^https?:\/\//, '');
-        return `${attr}="${base}${origin}/${url}"`;
+        const clean = fullUrl.replace(/^https?:\/\//, '');
+        return `${attr}=${quote}${base}${clean}${quote}`;
       } catch (e) {
         return match;
       }
     });
 
-    // Fix srcset (important for images on many sites)
-    body = body.replace(/srcset="([^"]*)"/gi, (match, srcset) => {
+    // Fix srcset for responsive images
+    body = body.replace(/srcset=(["'])(.*?)\1/gi, (match, quote, srcset) => {
       const newSrcset = srcset.split(',').map(item => {
-        const parts = item.trim().split(/\s+/);
+        const trimmed = item.trim();
+        const parts = trimmed.split(/\s+/);
         let urlPart = parts[0];
-        if (urlPart.startsWith('http') || urlPart.startsWith('//')) {
-          const clean = urlPart.replace(/^https?:\/\//, '');
+
+        try {
+          let fullUrl;
+          if (urlPart.startsWith('http') || urlPart.startsWith('//')) {
+            fullUrl = urlPart.startsWith('//') ? 'https:' + urlPart : urlPart;
+          } else if (urlPart.startsWith('/')) {
+            const origin = new URL(target).origin;
+            fullUrl = origin + urlPart;
+          } else {
+            const origin = new URL(target).origin;
+            fullUrl = origin + '/' + urlPart;
+          }
+
+          const clean = fullUrl.replace(/^https?:\/\//, '');
           parts[0] = base + clean;
-        } else if (urlPart.startsWith('/')) {
-          const origin = new URL(target).origin.replace(/^https?:\/\//, '');
-          parts[0] = base + origin + urlPart;
+          return parts.join(' ');
+        } catch (e) {
+          return trimmed;
         }
-        return parts.join(' ');
       }).join(', ');
-      return `srcset="${newSrcset}"`;
+
+      return `srcset=${quote}${newSrcset}${quote}`;
     });
 
     res.send(body);
