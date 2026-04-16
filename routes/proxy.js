@@ -10,7 +10,7 @@ router.use(async (req, res) => {
       return res.redirect('/proxy/');
     }
 
-    // Auto Google search if it doesn't look like a domain
+    // Auto Google search for plain text
     if (!target.startsWith('http') && !target.includes('.')) {
       target = `https://www.google.com/search?q=${encodeURIComponent(target)}`;
     } else if (!target.startsWith('http')) {
@@ -21,7 +21,7 @@ router.use(async (req, res) => {
 
     const response = await fetch(target, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
 
@@ -34,8 +34,8 @@ router.use(async (req, res) => {
 
     const base = '/proxy/';
 
-    // Stronger rewriting for links, images, scripts, etc.
-    body = body.replace(/(href|src|action|data-src|data-original|poster|srcset)=(["'])(.*?)\2/gi, (match, attr, quote, url) => {
+    // Stronger attribute rewriting (handles more cases)
+    body = body.replace(/(href|src|action|data-src|data-original|poster|data-lazy|data-srcset)=(["'])(.*?)\2/gi, (match, attr, quote, url) => {
       if (!url || url.startsWith('data:') || url.startsWith('#') || url.startsWith('javascript:') || url.startsWith('blob:') || url.startsWith('tel:') || url.startsWith('mailto:')) {
         return match;
       }
@@ -44,14 +44,10 @@ router.use(async (req, res) => {
         let fullUrl;
         if (url.startsWith('http') || url.startsWith('//')) {
           fullUrl = url.startsWith('//') ? 'https:' + url : url;
-        } else if (url.startsWith('/')) {
-          // Relative root path
-          const origin = new URL(target).origin;
-          fullUrl = origin + url;
         } else {
-          // Other relative paths
-          const origin = new URL(target).origin;
-          fullUrl = origin + '/' + url;
+          // All relative URLs (/, ./, ../, or just filename)
+          const urlObj = new URL(target);
+          fullUrl = new URL(url, urlObj.origin).toString();
         }
 
         const clean = fullUrl.replace(/^https?:\/\//, '');
@@ -61,28 +57,25 @@ router.use(async (req, res) => {
       }
     });
 
-    // Fix srcset for responsive images
+    // Fix srcset (very important for images)
     body = body.replace(/srcset=(["'])(.*?)\1/gi, (match, quote, srcset) => {
       const newSrcset = srcset.split(',').map(item => {
         const trimmed = item.trim();
-        const parts = trimmed.split(/\s+/);
-        let urlPart = parts[0];
+        const spaceIndex = trimmed.search(/\s+/);
+        let urlPart = spaceIndex > 0 ? trimmed.substring(0, spaceIndex) : trimmed;
+        let rest = spaceIndex > 0 ? trimmed.substring(spaceIndex) : '';
 
         try {
           let fullUrl;
           if (urlPart.startsWith('http') || urlPart.startsWith('//')) {
             fullUrl = urlPart.startsWith('//') ? 'https:' + urlPart : urlPart;
-          } else if (urlPart.startsWith('/')) {
-            const origin = new URL(target).origin;
-            fullUrl = origin + urlPart;
           } else {
-            const origin = new URL(target).origin;
-            fullUrl = origin + '/' + urlPart;
+            const urlObj = new URL(target);
+            fullUrl = new URL(urlPart, urlObj.origin).toString();
           }
 
           const clean = fullUrl.replace(/^https?:\/\//, '');
-          parts[0] = base + clean;
-          return parts.join(' ');
+          return base + clean + rest;
         } catch (e) {
           return trimmed;
         }
@@ -97,8 +90,8 @@ router.use(async (req, res) => {
     console.error('Proxy error:', err.message);
     res.status(500).send(`
       <h1>Proxy Error</h1>
-      <p>Could not load the page: ${err.message}</p>
-      <p><a href="/proxy/">← Back to Proxy</a></p>
+      <p>${err.message}</p>
+      <a href="/proxy/">← Back to Proxy</a>
     `);
   }
 });
