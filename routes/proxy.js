@@ -5,6 +5,13 @@ const router = express.Router();
 router.get('/:encodedUrl(*)', async (req, res) => {
   let input = decodeURIComponent(req.params.encodedUrl).trim();
 
+  // If it's just words or an invalid URL, search Google instead
+  const looksLikeUrl = /^(https?:\/\/)?[\w\-]+(\.[\w\-]+)+(\/.*)?$/.test(input);
+  if (!looksLikeUrl) {
+    const searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(input);
+    return res.redirect('/proxy/' + encodeURIComponent(searchUrl));
+  }
+
   if (!/^https?:\/\//i.test(input)) {
     input = 'https://' + input;
   }
@@ -29,14 +36,13 @@ router.get('/:encodedUrl(*)', async (req, res) => {
 
     let body = await response.text();
 
-    // Inject a <base> tag so relative resources (CSS, images, fonts) load correctly
-    // This fixes formatting without touching any of the HTML
+    // Inject base tag for all relative resources (CSS, images, fonts)
     body = body.replace(
       /<head([^>]*)>/i,
       `<head$1><base href="${finalUrl}">`
     );
 
-    // Only rewrite href on <a> tags so clicking links stays in the proxy
+    // Only rewrite <a href> links to stay inside proxy
     body = body.replace(
       /<a\s([^>]*?)href="(https?:\/\/[^"]+)"([^>]*?)>/gi,
       (match, before, url, after) => `<a ${before}href="/proxy/${encodeURIComponent(url)}"${after}>`
@@ -50,7 +56,9 @@ router.get('/:encodedUrl(*)', async (req, res) => {
     res.send(body);
 
   } catch (err) {
-    res.status(500).send(`<h2>Failed to load: ${input}</h2><p>${err.message}</p>`);
+    // If fetch fails (bad domain etc), search Google instead
+    const searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(input);
+    return res.redirect('/proxy/' + encodeURIComponent(searchUrl));
   }
 });
 
