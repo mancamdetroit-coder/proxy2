@@ -148,10 +148,13 @@
       e.preventDefault();
       let input = document.getElementById('urlInput').value.trim();
       if (input) {
-        // Force clean path URL
         window.location.href = '/proxy/' + encodeURIComponent(input);
       }
     });
-  </script>
+  
+    function goTo(url) {
+      window.location.href = '/proxy/' + encodeURIComponent(url);
+    }
+  </script>>
 </body>
 </html>
