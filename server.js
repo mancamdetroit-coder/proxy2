@@ -1,12 +1,38 @@
 const express = require('express');
 const path = require('path');
+const session = require('express-session');
+const SQLiteStore = require('better-sqlite3-session-store')(session);
+const { db } = require('./db');
+const { loadUser } = require('./middleware/auth');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static('public'));           // serves all HTML/CSS/JS
-app.use(express.urlencoded({ extended: true })); // for form data
+// ─── Session ───────────────────────────────────────────────────────
+app.use(session({
+  store: new SQLiteStore({ client: db }),
+  secret: process.env.SESSION_SECRET || 'change-this-secret-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    // No maxAge = expires on browser close
+  }
+}));
 
-// Load all routes from routes/ folder
+// ─── Body parsing ─────────────────────────────────────────────────
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ─── Static files ─────────────────────────────────────────────────
+app.use(express.static('public'));
+
+// ─── Load user on every request ──────────────────────────────────
+app.use(loadUser);
+
+// ─── Routes ──────────────────────────────────────────────────────
 const mainRoutes = require('./routes/index');
 app.use('/', mainRoutes);
 
