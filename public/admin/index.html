@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel – Hamshchos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green: #00ff9d; --bg: #0a0a0a; --card: #111; --border: #222; --text: #ddd; --muted: #666; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Header ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 32px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--bg); z-index: 10;
+    }
+    .logo { font-size: 1.4rem; font-weight: bold; color: var(--green); }
+    .header-right { display: flex; gap: 12px; align-items: center; }
+    .badge { background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: 0.85rem; color: var(--muted); }
+    .btn-sm { padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.2s; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--green); color: var(--green); }
+    .btn-danger { background: #2a0a0a; border: 1.5px solid #ff4444; color: #ff6666; }
+    .btn-danger:hover { background: #ff4444; color: #fff; }
+    .btn-primary { background: var(--green); color: #000; }
+    .btn-primary:hover { background: #00cc7a; }
+
+    /* ── Layout ── */
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .section-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .section-title span { color: var(--muted); font-size: 0.9rem; font-weight: normal; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 28px; border-bottom: 1px solid var(--border); }
+    .tab { padding: 12px 24px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); cursor: pointer; font-size: 1rem; transition: all 0.2s; margin-bottom: -1px; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--green); border-bottom-color: var(--green); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── User cards ── */
+    .user-grid { display: flex; flex-direction: column; gap: 12px; }
+    .user-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 20px 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+    }
+    .user-card:hover { border-color: #333; }
+    .user-info { flex: 1; }
+    .user-name { font-size: 1.05rem; font-weight: bold; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .role-badge { font-size: 0.7rem; padding: 2px 10px; border-radius: 20px; font-weight: bold; }
+    .role-admin { background: #1a1000; color: #ffcc00; border: 1px solid #ffcc0040; }
+    .role-user { background: #001a0a; color: var(--green); border: 1px solid #00ff9d30; }
+    .perms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .perm-tag { font-size: 0.75rem; padding: 3px 10px; border-radius: 20px; background: #1a1a1a; color: #888; border: 1px solid #2a2a2a; }
+    .perm-tag.on { background: #001a0a; color: var(--green); border-color: #00ff9d30; }
+    .pages-list { margin-top: 10px; font-size: 0.8rem; color: var(--muted); }
+    .pages-list strong { color: #aaa; }
+    .user-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: flex-start; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      z-index: 100; align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 18px;
+      padding: 32px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal h2 { font-size: 1.2rem; margin-bottom: 24px; color: var(--green); }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 0.85rem; color: #888; margin-bottom: 6px; }
+    .form-group input[type="text"],
+    .form-group input[type="password"] {
+      width: 100%; padding: 12px 14px; background: #1a1a1a; border: 1.5px solid #2a2a2a;
+      border-radius: 10px; color: #fff; font-size: 0.95rem; outline: none;
+    }
+    .form-group input:focus { border-color: var(--green); }
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #1a1a1a;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: 0.9rem; }
+    .toggle-label small { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+    .toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; background: #2a2a2a; border-radius: 24px; cursor: pointer; transition: 0.2s;
+    }
+    .slider::before {
+      content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background: #555; border-radius: 50%; transition: 0.2s;
+    }
+    .toggle input:checked + .slider { background: var(--green); }
+    .toggle input:checked + .slider::before { transform: translateX(18px); background: #000; }
+    .pages-checkboxes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .page-check { display: flex; align-items: center; gap: 6px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 6px 12px; cursor: pointer; transition: all 0.15s; }
+    .page-check:hover { border-color: var(--green); }
+    .page-check input[type="checkbox"] { accent-color: var(--green); width: 15px; height: 15px; }
+    .page-check span { font-size: 0.85rem; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+    .error-msg { background: #2a0a0a; border: 1px solid #ff4444; color: #ff6666; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 16px; display: none; }
+    .error-msg.show { display: block; }
+    .select-field {
+      width: 100%; padding: 10px 14px; background: #1a1a1a; border: 1.5px solid #2a2a2a;
+      border-radius: 10px; color: #fff; font-size: 0.9rem; outline: none;
+    }
+    .select-field:focus { border-color: var(--green); }
+
+    /* ── Pages tab ── */
+    .pages-grid { display: flex; flex-direction: column; gap: 10px; }
+    .page-row {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .page-path { font-family: monospace; font-size: 0.9rem; color: var(--green); }
+    .page-desc { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+    .add-page-form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .add-page-form input { flex: 1; min-width: 140px; padding: 10px 14px; background: #1a1a1a; border: 1.5px solid #2a2a2a; border-radius: 10px; color: #fff; font-size: 0.9rem; outline: none; }
+    .add-page-form input:focus { border-color: var(--green); }
+
+    .empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 0.95rem; }
+    .success-toast {
+      position: fixed; bottom: 28px; right: 28px; background: #001a0a; border: 1px solid var(--green);
+      color: var(--green); padding: 12px 20px; border-radius: 12px; font-size: 0.9rem;
+      opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 200;
+    }
+    .success-toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Hamshchos Admin</div>
+  <div class="header-right">
+    <div class="badge" id="currentUserBadge">Loading...</div>
+    <a href="/" class="btn-sm btn-outline">← Home</a>
+    <a href="/logout" class="btn-sm btn-danger">Logout</a>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('users')">👥 Users</button>
+    <button class="tab" onclick="switchTab('pages')">📄 Pages</button>
+  </div>
+
+  <!-- ── USERS TAB ── -->
+  <div class="tab-content active" id="tab-users">
+    <div class="section-title">
+      All Users <span id="userCount"></span>
+      <button class="btn-sm btn-primary" id="addUserBtn" style="margin-left:auto" onclick="openAddModal()">+ Add User</button>
+    </div>
+    <div class="user-grid" id="userList">
+      <div class="empty">Loading...</div>
+    </div>
+  </div>
+
+  <!-- ── PAGES TAB ── -->
+  <div class="tab-content" id="tab-pages">
+    <div class="section-title">Registered Pages</div>
+    <div id="addPageSection" style="display:none">
+      <div class="add-page-form">
+        <input type="text" id="newPageName" placeholder="Display name (e.g. Proxy)">
+        <input type="text" id="newPagePath" placeholder="Path (e.g. /proxy)">
+        <input type="text" id="newPageDesc" placeholder="Description (optional)">
+        <button class="btn-sm btn-primary" onclick="addPage()">+ Add Page</button>
+      </div>
+    </div>
+    <div class="pages-grid" id="pageList">
+      <div class="empty">Loading...</div>
+    </div>
+  </div>
+</main>
+
+<!-- ── ADD / EDIT USER MODAL ── -->
+<div class="modal-backdrop" id="userModal">
+  <div class="modal">
+    <h2 id="modalTitle">Add User</h2>
+    <div class="error-msg" id="modalError"></div>
+
+    <div class="form-group" id="usernameGroup">
+      <label>Username</label>
+      <input type="text" id="mUsername" placeholder="username">
+    </div>
+    <div class="form-group" id="passwordGroup">
+      <label>Password</label>
+      <input type="password" id="mPassword" placeholder="Min 8 characters">
+    </div>
+
+    <div class="form-group">
+      <label>Permissions</label>
+      <div class="toggle-row">
+        <div class="toggle-label">Can add users
+          <small>This user can create new accounts</small>
+        </div>
+        <label class="toggle"><input type="checkbox" id="mCanAdd"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row" id="rowCanAddWho">
+        <div class="toggle-label">Can give "add users" permission
+          <small>Users they add can also add users</small>
+        </div>
+        <label class="toggle"><input type="checkbox" id="mCanAddWho"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Can remove users
+          <small>This user can delete accounts</small>
+        </div>
+        <label class="toggle"><input type="checkbox" id="mCanRemove"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row" id="rowRemoveScope" style="display:none">
+        <div class="toggle-label">Remove scope
+          <small>Which users can they remove?</small>
+        </div>
+        <select class="select-field" id="mRemoveScope" style="width:auto">
+          <option value="own">Only users they added</option>
+          <option value="all">All users (except admin's direct adds)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Page Access</label>
+      <div class="pages-checkboxes" id="mPageChecks"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-sm btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn-sm btn-primary" onclick="saveUser()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="success-toast" id="toast"></div>
+
+<script>
+let state = { users: [], pages: [], currentUser: null };
+let editingUserId = null;
+
+// ── Data ──────────────────────────────────────────────────────────
+async function loadData() {
+  const res = await fetch('/admin/api/users');
+  if (res.status === 403) { window.location.href = '/'; return; }
+  state = await res.json();
+  renderUsers();
+  renderPages();
+  document.getElementById('currentUserBadge').textContent =
+    `Logged in as: ${state.currentUser.role === 'admin' ? '👑 admin' : state.currentUser.id}`;
+
+  // Show add user button only if allowed
+  const canAdd = state.currentUser.role === 'admin' || state.currentUser.can_add_users;
+  document.getElementById('addUserBtn').style.display = canAdd ? '' : 'none';
+
+  // Show add page form only for admin
+  document.getElementById('addPageSection').style.display =
+    state.currentUser.role === 'admin' ? '' : 'none';
+}
+
+// ── Render Users ──────────────────────────────────────────────────
+function renderUsers() {
+  const list = document.getElementById('userList');
+  document.getElementById('userCount').textContent = `(${state.users.length})`;
+
+  if (!state.users.length) { list.innerHTML = '<div class="empty">No users yet.</div>'; return; }
+
+  list.innerHTML = state.users.map(u => {
+    const isMe = u.id === state.currentUser.id;
+    const myPages = state.currentUser.role === 'admin'
+      ? state.pages.map(p => p.id)
+      : (state.currentUser.pages || []).map(p => p.id);
+
+    const canEdit = state.currentUser.role === 'admin' ||
+      (u.created_by === state.currentUser.id);
+    const canDel = canRemoveCheck(state.currentUser, u);
+
+    const pageNames = u.pages && u.pages.length
+      ? u.pages.map(p => `<code>${p.path}</code>`).join(', ')
+      : '<em>none</em>';
+
+    return `
+    <div class="user-card">
+      <div class="user-info">
+        <div class="user-name">
+          ${u.username}
+          <span class="role-badge role-${u.role}">${u.role}</span>
+          ${isMe ? '<span class="role-badge" style="background:#1a1a1a;color:#888;border-color:#333">you</span>' : ''}
+        </div>
+        <div class="perms">
+          <span class="perm-tag ${u.can_add_users ? 'on' : ''}">Add users: ${u.can_add_users ? '✓' : '✗'}</span>
+          <span class="perm-tag ${u.can_add_users_who_add ? 'on' : ''}">Grant add-perm: ${u.can_add_users_who_add ? '✓' : '✗'}</span>
+          <span class="perm-tag ${u.can_remove_users ? 'on' : ''}">Remove users: ${u.can_remove_users ? '✓ (' + u.remove_scope + ')' : '✗'}</span>
+        </div>
+        <div class="pages-list"><strong>Pages:</strong> ${pageNames}</div>
+      </div>
+      <div class="user-actions">
+        ${canEdit && u.role !== 'admin' ? `<button class="btn-sm btn-outline" onclick="openEditModal(${u.id})">Edit</button>` : ''}
+        ${canDel && !isMe ? `<button class="btn-sm btn-danger" onclick="removeUser(${u.id}, '${u.username}')">Remove</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function canRemoveCheck(actor, target) {
+  if (!actor.can_remove_users) return false;
+  if (target.role === 'admin') return false;
+  if (actor.role === 'admin') return true;
+  if (actor.remove_scope === 'own') return target.created_by === actor.id;
+  if (actor.remove_scope === 'all') return target.created_by !== null;
+  return false;
+}
+
+// ── Render Pages ──────────────────────────────────────────────────
+function renderPages() {
+  const list = document.getElementById('pageList');
+  if (!state.pages.length) { list.innerHTML = '<div class="empty">No pages registered.</div>'; return; }
+  list.innerHTML = state.pages.map(p => `
+    <div class="page-row">
+      <div>
+        <div class="user-name">${p.name}</div>
+        <div class="page-path">${p.path}</div>
+        ${p.description ? `<div class="page-desc">${p.description}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── Modal ─────────────────────────────────────────────────────────
+function buildPageChecks(selectedIds) {
+  const cu = state.currentUser;
+  const allowedPageIds = cu.role === 'admin'
+    ? state.pages.map(p => p.id)
+    : (cu.pages || []).map(p => p.id);
+
+  return state.pages
+    .filter(p => allowedPageIds.includes(p.id))
+    .map(p => `
+      <label class="page-check">
+        <input type="checkbox" value="${p.id}" ${selectedIds.includes(p.id) ? 'checked' : ''}>
+        <span>${p.name} <code style="font-size:0.75rem;color:#666">${p.path}</code></span>
+      </label>
+    `).join('') || '<em style="color:#666;font-size:0.85rem">No pages available to grant</em>';
+}
+
+function openAddModal() {
+  editingUserId = null;
+  document.getElementById('modalTitle').textContent = 'Add User';
+  document.getElementById('usernameGroup').style.display = '';
+  document.getElementById('passwordGroup').style.display = '';
+  document.getElementById('mUsername').value = '';
+  document.getElementById('mPassword').value = '';
+  document.getElementById('mCanAdd').checked = false;
+  document.getElementById('mCanAddWho').checked = false;
+  document.getElementById('mCanRemove').checked = false;
+  document.getElementById('mRemoveScope').value = 'own';
+  document.getElementById('rowRemoveScope').style.display = 'none';
+  document.getElementById('mPageChecks').innerHTML = buildPageChecks([]);
+
+  // Hide canAddWho if actor can't grant it
+  const cu = state.currentUser;
+  document.getElementById('rowCanAddWho').style.display =
+    (cu.role === 'admin' || cu.can_add_users_who_add) ? '' : 'none';
+
+  document.getElementById('modalError').classList.remove('show');
+  document.getElementById('userModal').classList.add('open');
+}
+
+function openEditModal(userId) {
+  const u = state.users.find(x => x.id === userId);
+  if (!u) return;
+  editingUserId = userId;
+  document.getElementById('modalTitle').textContent = `Edit: ${u.username}`;
+  document.getElementById('usernameGroup').style.display = 'none';
+  document.getElementById('passwordGroup').style.display = 'none';
+  document.getElementById('mCanAdd').checked = !!u.can_add_users;
+  document.getElementById('mCanAddWho').checked = !!u.can_add_users_who_add;
+  document.getElementById('mCanRemove').checked = !!u.can_remove_users;
+  document.getElementById('mRemoveScope').value = u.remove_scope || 'own';
+  document.getElementById('rowRemoveScope').style.display = u.can_remove_users ? '' : 'none';
+  document.getElementById('mPageChecks').innerHTML = buildPageChecks((u.pages || []).map(p => p.id));
+
+  const cu = state.currentUser;
+  document.getElementById('rowCanAddWho').style.display =
+    (cu.role === 'admin' || cu.can_add_users_who_add) ? '' : 'none';
+
+  document.getElementById('modalError').classList.remove('show');
+  document.getElementById('userModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('userModal').classList.remove('open');
+  editingUserId = null;
+}
+
+// Toggle remove scope visibility
+document.getElementById('mCanRemove').addEventListener('change', function() {
+  document.getElementById('rowRemoveScope').style.display = this.checked ? '' : 'none';
+});
+
+// ── Save User ─────────────────────────────────────────────────────
+async function saveUser() {
+  const errBox = document.getElementById('modalError');
+  errBox.classList.remove('show');
+
+  const pageIds = [...document.querySelectorAll('#mPageChecks input:checked')].map(el => parseInt(el.value));
+  const payload = {
+    canAddUsers: document.getElementById('mCanAdd').checked,
+    canAddUsersWhoAdd: document.getElementById('mCanAddWho').checked,
+    canRemoveUsers: document.getElementById('mCanRemove').checked,
+    removeScope: document.getElementById('mRemoveScope').value,
+    pageIds
+  };
+
+  let res;
+  if (editingUserId) {
+    res = await fetch(`/admin/api/users/${editingUserId}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+  } else {
+    payload.username = document.getElementById('mUsername').value.trim();
+    payload.password = document.getElementById('mPassword').value;
+    res = await fetch('/admin/api/users', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+  }
+
+  const data = await res.json();
+  if (!data.success) {
+    errBox.textContent = data.error || 'Something went wrong';
+    errBox.classList.add('show');
+    return;
+  }
+
+  closeModal();
+  showToast(editingUserId ? 'User updated!' : 'User created!');
+  loadData();
+}
+
+// ── Remove User ───────────────────────────────────────────────────
+async function removeUser(id, username) {
+  if (!confirm(`Remove user "${username}"? This cannot be undone.`)) return;
+  const res = await fetch(`/admin/api/users/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) { showToast('User removed'); loadData(); }
+  else alert(data.error || 'Failed to remove user');
+}
+
+// ── Add Page ──────────────────────────────────────────────────────
+async function addPage() {
+  const name = document.getElementById('newPageName').value.trim();
+  const path = document.getElementById('newPagePath').value.trim();
+  const description = document.getElementById('newPageDesc').value.trim();
+  if (!name || !path) return alert('Name and path are required');
+  const res = await fetch('/admin/api/pages', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, path, description })
+  });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('newPageName').value = '';
+    document.getElementById('newPagePath').value = '';
+    document.getElementById('newPageDesc').value = '';
+    showToast('Page added!');
+    loadData();
+  } else { alert(data.error || 'Failed to add page'); }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Close modal on backdrop click
+document.getElementById('userModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+loadData();
+</script>
+</body>
+</html>
