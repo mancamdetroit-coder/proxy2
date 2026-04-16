@@ -2,28 +2,169 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hamshchos Proxy</title>
   <style>
-    body { font-family: system-ui; background:#0f0f0f; color:white; text-align:center; padding:100px 20px; }
-    h1 { font-size: 3rem; }
-    form { max-width:700px; margin:40px auto; display:flex; gap:10px; }
-    input { flex:1; padding:18px; font-size:1.2rem; border-radius:12px; background:#222; color:white; border:none; }
-    button { padding:18px 40px; background:#00ff9d; color:black; font-weight:bold; border:none; border-radius:12px; }
+    :root {
+      --primary: #00ff9d;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      width: 100%;
+      padding: 20px 0;
+      text-align: center;
+      border-bottom: 1px solid #222;
+    }
+    .logo {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+      padding: 60px 20px 40px;
+      text-align: center;
+      flex: 1;
+    }
+    h1 {
+      font-size: 3.2rem;
+      margin-bottom: 12px;
+    }
+    p.subtitle {
+      font-size: 1.3rem;
+      color: #aaa;
+      margin-bottom: 50px;
+    }
+    .search-box {
+      display: flex;
+      gap: 12px;
+      max-width: 680px;
+      margin: 0 auto 40px;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 18px 24px;
+      font-size: 1.15rem;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 16px;
+      color: white;
+      outline: none;
+    }
+    .search-box input:focus {
+      border-color: var(--primary);
+    }
+    .search-box button {
+      padding: 0 40px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: var(--primary);
+      color: black;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .search-box button:hover {
+      background: #00cc7a;
+      transform: translateY(-2px);
+    }
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .quick-links button {
+      padding: 12px 24px;
+      background: #1f1f1f;
+      color: #ddd;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-links button:hover {
+      background: #00ff9d;
+      color: black;
+    }
+    footer {
+      padding: 30px 0;
+      color: #555;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
-  <h1>🚀 Hamshchos Proxy</h1>
-  <p>Unblock any website</p>
+  <header>
+    <div class="logo">Hamshchos</div>
+  </header>
 
-  <form action="/proxy" method="get">
-    <input type="text" name="url" placeholder="youtube.com" required>
-    <button type="submit">Go →</button>
-  </form>
+  <div class="container">
+    <h1>Secret Proxy</h1>
+    <p class="subtitle">Unblock any website • Fast & Private</p>
 
-  <div style="margin-top:40px;">
-    <button onclick="location.href='/proxy/hamshachos.dev'">Hamshachos</button>
-    <button onclick="location.href='/proxy/berel.me'">Berel.me</button>
-    <button onclick="location.href='/proxy/github.com'">GitHub</button>
+    <!-- Clean URL Search Form -->
+    <form id="proxyForm" class="search-box">
+      <input 
+        type="text" 
+        id="urlInput" 
+        placeholder="type a link  or  just type anything to search Google"
+        autocomplete="off"
+        required>
+      <button type="submit">Go →</button>
+    </form>
+
+    <div class="quick-links">
+      <button onclick="goTo('hamshachos.dev')">Hamshachos</button>
+      <button onclick="goTo('berel.me')">Berel.me</button>
+      <button onclick="goTo('github.com')">GitHub</button>
+      <button onclick="goTo('613tube.com')">613Tube</button>
+    </div>
   </div>
+
+  <footer>
+    Only for personal use • Not shown on main homepage
+  </footer>
+
+  <script>
+    function goTo(site) {
+      window.location.href = '/proxy/' + site;
+    }
+
+    // Handle form submit with clean URL (no ?url=)
+    document.getElementById('proxyForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const input = document.getElementById('urlInput').value.trim();
+      
+      if (input) {
+        // If it looks like a search query (no dot and no http), it will be handled in backend
+        window.location.href = '/proxy/' + encodeURIComponent(input);
+      }
+    });
+
+    // Allow pressing Enter in input
+    document.getElementById('urlInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        document.getElementById('proxyForm').dispatchEvent(new Event('submit'));
+      }
+    });
+  </script>
 </body>
 </html>
