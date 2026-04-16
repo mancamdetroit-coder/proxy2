@@ -1,30 +1,27 @@
-const express = require('express');
-const app = express();
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
-// Middleware to handle redirects and rewrites
-app.use((req, res, next) => {
-    const url = req.url;
+module.exports = function(app) {
+    app.use('/api/google', createProxyMiddleware({
+        target: 'https://www.googleapis.com',
+        changeOrigin: true,
+        pathRewrite: {
+            '^/api/google': '',
+        },
+        onProxyRes: function(proxyRes, req, res) {
+            delete proxyRes.headers['content-security-policy'];
+        },
+        followRedirects: true
+    }));
 
-    // Handle redirects
-    if (url.startsWith('/old-path')) {
-        return res.redirect(301, '/new-path');
-    }
-
-    // Rewrite JavaScript URLs
-    if (url.endsWith('.js')) {
-        req.url = '/scripts' + url;
-    }
-
-    // Support for Google and YouTube URLs
-    if (url.includes('google.com') || url.includes('youtube.com')) {
-        return res.redirect(307, 'https://www.' + req.headers.host + url);
-    }
-
-    next();
-});
-
-// Your existing routes here
-
-app.listen(3000, () => {
-    console.log('Proxy server running on port 3000');
-});
+    app.use('/api/youtube', createProxyMiddleware({
+        target: 'https://www.youtube.com',
+        changeOrigin: true,
+        pathRewrite: {
+            '^/api/youtube': '',
+        },
+        onProxyRes: function(proxyRes, req, res) {
+            delete proxyRes.headers['content-security-policy'];
+        },
+        followRedirects: true
+    }));
+};
