@@ -1,4 +1,5 @@
 const express = require('express');
+const { updatePassword, setPasswordHint, getPasswordHint } = require('../db');
 const path = require('path');
 const { requireAdmin, requireLogin, canRemove } = require('../middleware/auth');
 const {
@@ -22,9 +23,10 @@ router.get('/api/users', requireLogin, (req, res) => {
   // Attach page access to each user
   const users = allUsers.map(u => ({
     ...u,
-    pages: getUserPages(u.id)
-  }));
-
+    pages: getUserPages(u.id),
+    password_hint: u.password_hint || null  // already included via ...u but explicit is fine
+  })); 
+    
   res.json({ users, pages: allPages, currentUser: {
     id: req.user.id,
     role: req.user.role,
@@ -146,6 +148,37 @@ router.post('/api/pages', requireAdmin, (req, res) => {
   } catch (e) {
     res.status(400).json({ error: 'Page path already exists' });
   }
+});
+
+// ─── API: Change any user's password (admin only) ─────────────────
+router.put('/api/users/:id/password', requireAdmin, (req, res) => {
+  const targetId = parseInt(req.params.id);
+  const { password } = req.body;
+  if (!password || password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+  const target = getUserById(targetId);
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  updatePassword(targetId, password);
+  res.json({ success: true });
+});
+
+// ─── API: Set password hint for any user (admin only) ────────────
+router.put('/api/users/:id/hint', requireAdmin, (req, res) => {
+  const targetId = parseInt(req.params.id);
+  const { hint } = req.body;
+  const target = getUserById(targetId);
+  if (!target) return res.status(404).json({ error: 'User not found' });
+  setPasswordHint(targetId, hint || null);
+  res.json({ success: true });
+});
+
+// ─── API: Get password hint (admin only) ─────────────────────────
+router.get('/api/users/:id/hint', requireAdmin, (req, res) => {
+  const targetId = parseInt(req.params.id);
+  const row = getPasswordHint(targetId);
+  if (!row) return res.status(404).json({ error: 'User not found' });
+  res.json({ hint: row.password_hint || null });
 });
 
 module.exports = router;
