@@ -45,16 +45,16 @@ function rewriteHtml(body, finalUrl) {
     }
   );
 
-  // Rewrite inline style url() references
+  // Rewrite inline style url() references (all formats)
   body = body.replace(
-    /url\(['"]?(https?:\/\/[^'")]+)['"]?\)/gi,
-    (match, url) => `url('/proxy/${encodeURIComponent(url)}')`
-  );
-  body = body.replace(
-    /url\(['"]?(\/[^'")]+)['"]?\)/gi,
-    (match, path) => {
-      if (path.startsWith('/proxy/')) return match;
-      return `url('/proxy/${encodeURIComponent(base + path)}')`;
+    /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi,
+    (match, quote, rawUrl) => {
+      const url = rawUrl.trim();
+      if (!url || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('/proxy/')) return match;
+      try {
+        const abs = new URL(url, finalUrl).href;
+        return `url('/proxy/${encodeURIComponent(abs)}')`;
+      } catch(e) { return match; }
     }
   );
 
@@ -157,19 +157,36 @@ function rewriteHtml(body, finalUrl) {
 function rewriteCss(css, finalUrl) {
   const base = new URL(finalUrl).origin;
 
-  // Rewrite url() with absolute URLs
+  // Rewrite ALL url() references — absolute, root-relative, and relative paths
   css = css.replace(
-    /url\(['"]?(https?:\/\/[^'")]+)['"]?\)/gi,
-    (match, url) => `url('/proxy/${encodeURIComponent(url)}')`
-  );
-  // Rewrite url() with root-relative paths
-  css = css.replace(
-    /url\(['"]?(\/[^'")]+)['"]?\)/gi,
-    (match, path) => {
-      if (path.startsWith('/proxy/')) return match;
-      return `url('/proxy/${encodeURIComponent(base + path)}')`;
+    /url\(\s*(['"]?)([^'")]+)\1\s*\)/gi,
+    (match, quote, rawUrl) => {
+      const url = rawUrl.trim();
+      if (!url || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('/proxy/')) return match;
+      try {
+        // new URL handles absolute, root-relative (/path), and relative (../fonts/x.woff2)
+        const abs = new URL(url, finalUrl).href;
+        return `url('/proxy/${encodeURIComponent(abs)}')`;
+      } catch(e) {
+        return match;
+      }
     }
   );
+
+  // Also rewrite @import "url" statements
+  css = css.replace(
+    /@import\s+(['"])([^'"]+)\1/gi,
+    (match, quote, url) => {
+      if (url.startsWith('/proxy/')) return match;
+      try {
+        const abs = new URL(url, finalUrl).href;
+        return `@import ${quote}/proxy/${encodeURIComponent(abs)}${quote}`;
+      } catch(e) {
+        return match;
+      }
+    }
+  );
+
   return css;
 }
 
