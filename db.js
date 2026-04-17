@@ -20,6 +20,7 @@ db.exec(`
     can_add_users_who_add INTEGER NOT NULL DEFAULT 0,  -- can give canAddUsers to new users
     can_remove_users INTEGER NOT NULL DEFAULT 0,
     remove_scope TEXT NOT NULL DEFAULT 'own', -- 'own' or 'all'
+    password_hint TEXT DEFAULT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -29,7 +30,7 @@ db.exec(`
     path TEXT UNIQUE NOT NULL,   -- e.g. "/proxy"
     description TEXT
   );
-
+  
   CREATE TABLE IF NOT EXISTS user_page_access (
     user_id INTEGER NOT NULL,
     page_id INTEGER NOT NULL,
@@ -38,6 +39,9 @@ db.exec(`
     FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
   );
 `);
+
+// Migrate: add password_hint column if it doesn't exist
+try { db.prepare('ALTER TABLE users ADD COLUMN password_hint TEXT DEFAULT NULL').run(); } catch(e) {}
 
 // Seed default pages
 const insertPage = db.prepare(`
@@ -165,14 +169,7 @@ function getPasswordHint(userId) {
 
 module.exports = {
   db,
-  getUserById,
-  getUserByUsername,
-  getAllUsers,
-  getAllPages,
-  getUserPages,
-  createUser,
-  updateUser,
-  deleteUser,
-  addPage,
-  updatePageAccess,
+  getUserById, getUserByUsername, getAllUsers, getAllPages,
+  getUserPages, createUser, updateUser, deleteUser,
+  addPage, updatePageAccess, updatePassword, setPasswordHint, getPasswordHint
 };
