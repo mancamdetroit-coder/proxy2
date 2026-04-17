@@ -121,6 +121,10 @@
     .add-page-form input { flex: 1; min-width: 140px; padding: 10px 14px; background: #1a1a1a; border: 1.5px solid #2a2a2a; border-radius: 10px; color: #fff; font-size: 0.9rem; outline: none; }
     .add-page-form input:focus { border-color: var(--green); }
 
+    /* ── Password modal ── */
+    .hint-text { font-size: 0.8rem; color: #555; margin-top: 6px; font-style: italic; }
+    .hint-text.set { color: #888; }
+    
     .empty { text-align: center; color: var(--muted); padding: 40px 0; font-size: 0.95rem; }
     .success-toast {
       position: fixed; bottom: 28px; right: 28px; background: #001a0a; border: 1px solid var(--green);
@@ -235,10 +239,107 @@
 
 <div class="success-toast" id="toast"></div>
 
+<!-- ── CHANGE PASSWORD MODAL ── -->
+<div class="modal-backdrop" id="pwModal">
+  <div class="modal" style="max-width:420px">
+    <h2>🔑 Change Password</h2>
+    <div class="error-msg" id="pwError"></div>
+    <p style="color:#666;font-size:0.85rem;margin-bottom:20px" id="pwTargetLabel"></p>
+
+    <div class="form-group">
+      <label>New Password</label>
+      <input type="password" id="pwNew" placeholder="Min 8 characters">
+    </div>
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <input type="password" id="pwConfirm" placeholder="Repeat password">
+    </div>
+    <div class="form-group">
+      <label>Password Hint <span style="color:#555;font-weight:normal">(optional — visible to admin only)</span></label>
+      <input type="text" id="pwHint" placeholder="e.g. My dog's name + birth year">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-sm btn-outline" onclick="closePwModal()">Cancel</button>
+      <button class="btn-sm btn-primary" onclick="savePassword()">Save Password</button>
+    </div>
+  </div>
+</div>
+  
 <script>
 let state = { users: [], pages: [], currentUser: null };
 let editingUserId = null;
 
+// ── Password Modal ────────────────────────────────────────────────
+let pwTargetId = null;
+
+async function openPwModal(userId, username) {
+  pwTargetId = userId;
+  document.getElementById('pwTargetLabel').textContent = `Changing password for: ${username}`;
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwConfirm').value = '';
+  document.getElementById('pwHint').value = '';
+  document.getElementById('pwError').classList.remove('show');
+
+  // Load existing hint
+  try {
+    const res = await fetch(`/admin/api/users/${userId}/hint`);
+    const data = await res.json();
+    if (data.hint) document.getElementById('pwHint').value = data.hint;
+  } catch(e) {}
+
+  document.getElementById('pwModal').classList.add('open');
+}
+
+function closePwModal() {
+  document.getElementById('pwModal').classList.remove('open');
+  pwTargetId = null;
+}
+
+async function savePassword() {
+  const errBox = document.getElementById('pwError');
+  errBox.classList.remove('show');
+
+  const pw = document.getElementById('pwNew').value;
+  const confirm = document.getElementById('pwConfirm').value;
+  const hint = document.getElementById('pwHint').value.trim();
+
+  if (!pw || pw.length < 8) {
+    errBox.textContent = 'Password must be at least 8 characters';
+    errBox.classList.add('show'); return;
+  }
+  if (pw !== confirm) {
+    errBox.textContent = 'Passwords do not match';
+    errBox.classList.add('show'); return;
+  }
+
+  const [pwRes, hintRes] = await Promise.all([
+    fetch(`/admin/api/users/${pwTargetId}/password`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    }),
+    fetch(`/admin/api/users/${pwTargetId}/hint`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hint })
+    })
+  ]);
+
+  const pwData = await pwRes.json();
+  if (!pwData.success) {
+    errBox.textContent = pwData.error || 'Failed to update password';
+    errBox.classList.add('show'); return;
+  }
+
+  closePwModal();
+  showToast('Password updated!');
+  loadData();
+}
+
+// Close pw modal on backdrop click
+document.getElementById('pwModal').addEventListener('click', function(e) {
+  if (e.target === this) closePwModal();
+});
+  
 // ── Data ──────────────────────────────────────────────────────────
 async function loadData() {
   const res = await fetch('/admin/api/users');
@@ -293,8 +394,14 @@ function renderUsers() {
           <span class="perm-tag ${u.can_remove_users ? 'on' : ''}">Remove users: ${u.can_remove_users ? '✓ (' + u.remove_scope + ')' : '✗'}</span>
         </div>
         <div class="pages-list"><strong>Pages:</strong> ${pageNames}</div>
+        ${u.password_hint && state.currentUser.role === 'admin'
+          ? `<div class="hint-text set">🔑 Hint: ${u.password_hint}</div>`
+          : ''}
       </div>
       <div class="user-actions">
+        ${state.currentUser.role === 'admin'
+          ? `<button class="btn-sm btn-outline" onclick="openPwModal(${u.id}, '${u.username}')">🔑 Password</button>`
+          : ''}
         ${canEdit && u.role !== 'admin' ? `<button class="btn-sm btn-outline" onclick="openEditModal(${u.id})">Edit</button>` : ''}
         ${canDel && !isMe ? `<button class="btn-sm btn-danger" onclick="removeUser(${u.id}, '${u.username}')">Remove</button>` : ''}
       </div>
@@ -325,7 +432,7 @@ function renderPages() {
     </div>
   `).join('');
 }
-
+  
 // ── Tabs ──────────────────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
