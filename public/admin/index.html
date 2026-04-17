@@ -137,7 +137,7 @@
   <div class="header-right">
     <div class="badge" id="currentUserBadge">Loading...</div>
     <a href="/" class="btn-sm btn-outline">← Home</a>
-    <a href="/logout" class="btn-sm btn-danger">Logout</a>
+    <button class="btn-sm btn-danger" onclick="logout()">Logout</button>
   </div>
 </header>
 
@@ -444,6 +444,11 @@ async function saveUser() {
   loadData();
 }
 
+async function logout() {
+  await fetch('/logout', { method: 'POST' });
+  window.location.href = '/login';
+}
+  
 // ── Remove User ───────────────────────────────────────────────────
 async function removeUser(id, username) {
   if (!confirm(`Remove user "${username}"? This cannot be undone.`)) return;
