@@ -150,6 +150,19 @@ function updatePageAccess(userId, pageIds) {
   for (const pid of pageIds) grant.run(userId, pid);
 }
 
+function updatePassword(userId, newPassword) {
+  const hash = bcrypt.hashSync(newPassword, 12);
+  db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hash, userId);
+}
+
+function setPasswordHint(userId, hint) {
+  db.prepare('UPDATE users SET password_hint = ? WHERE id = ?').run(hint, userId);
+}
+
+function getPasswordHint(userId) {
+  return db.prepare('SELECT password_hint FROM users WHERE id = ?').get(userId);
+}
+
 module.exports = {
   db,
   getUserById,
