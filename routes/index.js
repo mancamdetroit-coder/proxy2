@@ -1,14 +1,13 @@
 const express = require('express');
 const path = require('path');
 const router = express.Router();
-
 const { requirePageAccess } = require('../middleware/auth');
 const proxyRoutes = require('./proxy');
 const authRoutes = require('./auth');
 const adminRoutes = require('./admin');
 
-// Auth routes (login/logout)
-router.use('/proxy', proxyRouter);
+// Auth routes
+router.use('/auth', authRoutes);
 
 // Admin routes
 router.use('/admin', adminRoutes);
