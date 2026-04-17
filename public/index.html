@@ -50,5 +50,15 @@
       Only I know where they are.
     </div>
   </div>
+
+<script>
+  // Release focus trap after login redirect
+  window.addEventListener('load', () => {
+    document.body.focus();
+    document.body.setAttribute('tabindex', '-1');
+    document.body.focus();
+    document.body.removeAttribute('tabindex');
+  });
+</script>
 </body>
 </html>
