@@ -8,7 +8,7 @@ const authRoutes = require('./auth');
 const adminRoutes = require('./admin');
 
 // Auth routes (login/logout)
-router.use('/', authRoutes);
+router.use('/proxy', proxyRouter);
 
 // Admin routes
 router.use('/admin', adminRoutes);
