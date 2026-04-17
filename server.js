@@ -8,7 +8,10 @@ const { loadUser } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ─── Session ───────────────────────────────────────────────────────
+// ─── Trust Render's proxy (required for secure cookies) ───────────
+app.set('trust proxy', 1);
+
+// ─── Session ──────────────────────────────────────────────────────
 app.use(session({
   store: new SQLiteStore({ client: db }),
   secret: process.env.SESSION_SECRET || 'change-this-secret-in-production',
@@ -18,21 +21,14 @@ app.use(session({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    // No maxAge = expires on browser close
   }
 }));
 
-// ─── Body parsing ─────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ─── Static files ─────────────────────────────────────────────────
 app.use(express.static('public'));
-
-// ─── Load user on every request ──────────────────────────────────
 app.use(loadUser);
 
-// ─── Routes ──────────────────────────────────────────────────────
 const mainRoutes = require('./routes/index');
 app.use('/', mainRoutes);
 
