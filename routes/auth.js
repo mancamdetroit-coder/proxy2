@@ -4,18 +4,23 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const { getUserByUsername } = require('../db');
 
+const LOGIN_PAGE = path.join(__dirname, '../public/login/index.html');
+
 // Show login page
 router.get('/login', (req, res) => {
   if (req.user) return res.redirect('/');
-  res.sendFile(path.join(__dirname, '../public/login.html'));
+  res.sendFile(LOGIN_PAGE);
 });
 
-// Handle login form submit
+// Handle login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
+  if (!username || !password) {
+    return res.redirect('/login?error=missing');
+  }
   const user = getUserByUsername(username);
   if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.sendFile(path.join(__dirname, '../public/login.html'));
+    return res.redirect('/login?error=invalid');
   }
   req.session.userId = user.id;
   const next = req.query.next || '/';
