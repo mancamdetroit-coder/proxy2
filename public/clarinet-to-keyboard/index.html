@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clarinet Fingering Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#0f0e0d; --surface:#1a1917; --border:#2e2c29;
+  --text:#f0ece4; --muted:#7a756c; --dim:#4a4740;
+  --blue:#4a9eff; --blueglow:rgba(74,158,255,0.5);
+  --amber:#f5a623; --amberglow:rgba(245,166,35,0.5);
+  --accent:#c9a96e;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;}
+
+/* HEADER */
+header{
+  flex:0 0 auto;
+  padding:0.7rem 1.4rem;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  display:flex;align-items:baseline;gap:0.9rem;flex-wrap:wrap;
+}
+header h1{font-family:'DM Serif Display',serif;font-size:1.35rem;font-weight:400;color:var(--accent);}
+header span{font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;}
+
+/* BODY LAYOUT: clarinet left, info+keyboard right */
+.body{display:flex;flex:1;min-height:0;overflow:hidden;}
+
+/* CLARINET SIDE */
+.cl-panel{
+  flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  padding:0.8rem 0.6rem;
+  border-right:1px solid var(--border);
+  background:var(--bg);
+  overflow:hidden;
+}
+.cl-wrap{position:relative;display:inline-block;line-height:0;}
+.cl-wrap img{display:block;height:calc(100vh - 52px);max-height:780px;min-height:340px;width:auto;}
+
+/* HOLES — placed by JS as % of image, centered via transform */
+.hole{
+  position:absolute;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  border:2.5px solid transparent;
+  background:transparent;
+  transition:background .14s,border-color .14s,box-shadow .14s;
+  pointer-events:none;
+}
+.hole.active.finger{background:var(--blueglow);border-color:var(--blue);box-shadow:0 0 9px var(--blueglow);}
+.hole.active.special{background:var(--amberglow);border-color:var(--amber);box-shadow:0 0 9px var(--amberglow);}
+
+/* RIGHT SIDE */
+.r-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:240px;}
+
+/* NOTE DISPLAY */
+.note-box{
+  flex:0 0 auto;
+  padding:0.8rem 1.2rem;
+  border-bottom:1px solid var(--border);
+  background:var(--surface);
+  display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;
+}
+.pitch{font-family:'DM Serif Display',serif;font-size:2.4rem;line-height:1;color:var(--text);}
+.note-meta{display:flex;flex-direction:column;gap:3px;}
+.sounds{font-size:0.75rem;color:var(--muted);}
+.sounds em{color:var(--accent);font-style:normal;}
+.placeholder{font-size:0.85rem;color:var(--dim);}
+
+/* BADGES */
+.badges-area{flex:0 0 auto;padding:0.7rem 1.2rem;border-bottom:1px solid var(--border);min-height:54px;}
+.sec-lbl{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.badges{display:flex;flex-wrap:wrap;gap:5px;}
+.badge{font-size:0.72rem;padding:3px 10px;border-radius:99px;font-weight:500;}
+.badge.finger{background:rgba(74,158,255,.12);color:#7dbfff;border:1px solid rgba(74,158,255,.3);}
+.badge.special{background:rgba(245,166,35,.12);color:#f5c26a;border:1px solid rgba(245,166,35,.3);}
+.tip{font-size:0.73rem;color:var(--muted);font-style:italic;margin-top:5px;padding-left:4px;border-left:2px solid var(--border);}
+
+/* LEGEND */
+.legend-area{flex:0 0 auto;padding:0.5rem 1.2rem;border-bottom:1px solid var(--border);display:flex;gap:1rem;align-items:center;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:5px;font-size:0.7rem;color:var(--muted);}
+.ldot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.ldot.f{background:var(--blueglow);border:2px solid var(--blue);}
+.ldot.s{background:var(--amberglow);border:2px solid var(--amber);}
+
+/* KEYBOARD AREA — fills remaining space */
+.kb-area{flex:1;display:flex;flex-direction:column;padding:0.7rem 1rem 0.6rem;overflow:hidden;}
+.kb-lbl{font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+
+/* scrollable keyboard container */
+.kb-scroll{overflow-x:auto;overflow-y:hidden;padding-bottom:4px;}
+.keyboard{position:relative;height:100px;display:flex;user-select:none;width:max-content;}
+
+.wk{
+  position:relative;width:28px;min-width:28px;height:88px;
+  background:#ccc5b5;border:1px solid #7a7060;border-radius:0 0 4px 4px;
+  cursor:pointer;z-index:1;flex-shrink:0;transition:background .09s;
+}
+.wk:hover{background:#b5ccee;}
+.wk.active{background:var(--blue);}
+.wk .lbl{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:7px;color:#4a4030;pointer-events:none;white-space:nowrap;}
+.wk.active .lbl{color:#fff;}
+.wk.out-of-range{background:#888070;cursor:not-allowed;opacity:0.4;}
+.wk.out-of-range:hover{background:#888070;}
+
+.bk{
+  position:absolute;width:18px;height:54px;
+  background:#181410;border:1px solid #080604;border-radius:0 0 3px 3px;
+  cursor:pointer;z-index:2;top:0;transition:background .09s;
+}
+.bk:hover{background:#1a2e48;}
+.bk.active{background:#185FA5;border-color:var(--blue);}
+.bk.out-of-range{background:#3a3530;cursor:not-allowed;opacity:0.5;}
+.bk.out-of-range:hover{background:#3a3530;}
+
+/* range indicator below keyboard */
+.range-hint{font-size:0.65rem;color:var(--dim);margin-top:5px;padding-top:4px;border-top:1px solid var(--border);}
+.range-hint em{color:var(--muted);font-style:normal;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Clarinet Fingering Guide</h1>
+  <span>Bb Clarinet · Full written range</span>
+</header>
+
+<div class="body">
+
+  <!-- CLARINET IMAGE -->
+  <div class="cl-panel">
+    <div class="cl-wrap" id="cwrap">
+      <img id="cimg"
+        src="https://sw.tomplay.com/images/fingering-charts/instruments/clarinet/interactive-clarinet-background.webp"
+        alt="Clarinet diagram"/>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="r-panel">
+
+    <div class="note-box" id="note-box">
+      <div class="placeholder">Click any piano key to see the fingering</div>
+    </div>
+
+    <div class="badges-area" id="badges-area" style="display:none;">
+      <div class="sec-lbl">Holes &amp; keys to use</div>
+      <div class="badges" id="badges"></div>
+      <div class="tip" id="tip" style="display:none;"></div>
+    </div>
+
+    <div class="legend-area">
+      <div class="leg"><div class="ldot f"></div>Finger hole</div>
+      <div class="leg"><div class="ldot s"></div>Special / register key</div>
+    </div>
+
+    <div class="kb-area">
+      <div class="kb-lbl">Piano — click a note (greyed = outside clarinet range)</div>
+      <div class="kb-scroll">
+        <div class="keyboard" id="keyboard"></div>
+      </div>
+      <div class="range-hint">Clarinet written range: <em>E3 – C7</em> &nbsp;·&nbsp; Sounds a whole step higher (Bb instrument)</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── HOLE POSITIONS from user calibration ── */
+const HOLES = {
+  register:  {label:'Register key',    lx:73.75, ty:38.83, sw:3.8, type:'special'},
+  thumb:     {label:'Thumb hole',      lx:74.86, ty:44.17, sw:3.8, type:'special'},
+  A_key:     {label:'A / long Bb key', lx:80.14, ty:19.17, sw:3.2, type:'special'},
+  Eb_key:    {label:'Eb key',          lx:85.00, ty:38.83, sw:3.0, type:'special'},
+  Cs_key:    {label:'C# key',          lx:87.78, ty:45.17, sw:3.0, type:'special'},
+  lh_index:  {label:'Left index',      lx:81.46, ty:25.50, sw:4.2, type:'finger'},
+  lh_middle: {label:'Left middle',     lx:83.54, ty:36.67, sw:4.2, type:'finger'},
+  lh_ring:   {label:'Left ring',       lx:85.35, ty:43.67, sw:4.2, type:'finger'},
+  k1:        {label:'Side key 1',      lx:81.53, ty:52.83, sw:3.0, type:'special'},
+  k2:        {label:'Side key 2',      lx:81.88, ty:55.50, sw:3.0, type:'special'},
+  k3:        {label:'Side key 3',      lx:83.40, ty:56.67, sw:3.0, type:'special'},
+  k4:        {label:'Side key 4',      lx:84.03, ty:59.33, sw:3.0, type:'special'},
+  rh_index:  {label:'Right index',     lx:88.96, ty:63.00, sw:4.2, type:'finger'},
+  rh_middle: {label:'Right middle',    lx:90.56, ty:72.33, sw:4.2, type:'finger'},
+  rh_ring:   {label:'Right ring',      lx:92.08, ty:80.00, sw:4.2, type:'finger'},
+  B_key:     {label:'B key',           lx:91.11, ty:76.33, sw:3.0, type:'special'},
+  Fs_key:    {label:'F# key',          lx:89.72, ty:86.33, sw:3.0, type:'special'},
+  Gs_key:    {label:'G# key',          lx:92.22, ty:87.17, sw:3.0, type:'special'},
+  E_key:     {label:'E key',           lx:90.07, ty:92.33, sw:3.0, type:'special'},
+  F_key:     {label:'F key',           lx:92.71, ty:92.17, sw:3.0, type:'special'},
+};
+
+/* ── FULL CLARINET FINGERING CHART (written pitch, Bb clarinet) ──
+   Chalumeau register: E3–Bb4
+   Throat tones: A4–C#5
+   Clarion register: D5–C6
+   Altissimo: C#6–C7 (simplified)
+*/
+const FINGERINGS = {
+  /* === CHALUMEAU (low register) === */
+  'E3':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb','E_key'], tip:'Very low E — all holes + low E key.'},
+  'F3':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb','F_key'], tip:'Low F — all holes + F key.'},
+  'Gb3': {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb','Fs_key'], tip:'Low F# — all holes + F# key.'},
+  'G3':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb','Gs_key'], tip:'Low G — all holes + G# key (press and vent).'},
+  'Ab3': {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb','Gs_key'], tip:'Low G# — all holes + G# key.'},
+  'A3':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb'], tip:'Low A — thumb + all six holes.'},
+  'Bb3': {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb','B_key'], tip:'Low Bb — all holes + B key (pinky).'},
+  'B3':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb','Gs_key'], tip:'Low B — all holes + G# side key.'},
+  'C4':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb'], tip:'Chalumeau C — thumb + all six holes.'},
+  'Db4': {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['thumb','Cs_key'], tip:'Add C# key.'},
+  'D4':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle'], reg:['thumb'], tip:'Lift right ring finger.'},
+  'Eb4': {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle'], reg:['thumb','Eb_key'], tip:'Add Eb side key.'},
+  'E4':  {holes:['lh_index','lh_middle','lh_ring','rh_index'], reg:['thumb'], tip:''},
+  'F4':  {holes:['lh_index','lh_middle','lh_ring'], reg:['thumb'], tip:''},
+  'Gb4': {holes:['lh_index','lh_middle'], reg:['thumb','Gs_key'], tip:'Left index + middle + G# key.'},
+  'G4':  {holes:['lh_index','lh_middle'], reg:['thumb'], tip:''},
+  'Ab4': {holes:['lh_index'], reg:['thumb','Gs_key'], tip:'Throat Ab — index + G# key.'},
+  'A4':  {holes:['lh_index'], reg:['thumb'], tip:'Throat A — index only.'},
+  'Bb4': {holes:['lh_index'], reg:['thumb','A_key'], tip:'Use the long Bb / A key (top of left hand).'},
+  /* === THROAT TONES === */
+  'B4':  {holes:[], reg:['register','thumb'], tip:'Throat B — register key + thumb only.'},
+  'C5':  {holes:['lh_index'], reg:['register','thumb'], tip:'Throat C.'},
+  'Db5': {holes:['lh_index','lh_middle'], reg:['register','thumb'], tip:'Throat Db.'},
+  /* === CLARION (upper register) === */
+  'D5':  {holes:['lh_index','lh_middle','lh_ring','rh_index'], reg:['register','thumb'], tip:''},
+  'Eb5': {holes:['lh_index','lh_middle','lh_ring','rh_index'], reg:['register','thumb','Eb_key'], tip:'Add Eb side key.'},
+  'E5':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle'], reg:['register','thumb'], tip:''},
+  'F5':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['register','thumb'], tip:''},
+  'Gb5': {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['register','thumb','Gs_key'], tip:'Add G# key.'},
+  'G5':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle'], reg:['register','thumb'], tip:''},
+  'Ab5': {holes:['lh_index','lh_middle','lh_ring','rh_index'], reg:['register','thumb','Gs_key'], tip:''},
+  'A5':  {holes:['lh_index','lh_middle','lh_ring'], reg:['register','thumb'], tip:''},
+  'Bb5': {holes:['lh_index','lh_middle'], reg:['register','thumb','B_key'], tip:'Add B key (right pinky).'},
+  'B5':  {holes:['lh_index'], reg:['register','thumb'], tip:''},
+  'C6':  {holes:['lh_index','lh_middle','rh_index'], reg:['register','thumb'], tip:'High clarino C.'},
+  /* === ALTISSIMO (simplified) === */
+  'Db6': {holes:['lh_index','lh_middle'], reg:['register','thumb','Cs_key'], tip:'Altissimo — fingerings vary; this is one common option.'},
+  'D6':  {holes:['lh_index','lh_middle','lh_ring'], reg:['register','thumb'], tip:'Altissimo D.'},
+  'Eb6': {holes:['lh_index','lh_middle','lh_ring'], reg:['register','thumb','Eb_key'], tip:'Altissimo Eb.'},
+  'E6':  {holes:['lh_index','lh_middle','lh_ring','rh_index'], reg:['register','thumb'], tip:'Altissimo E.'},
+  'F6':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle'], reg:['register','thumb'], tip:'Altissimo F.'},
+  'Gb6': {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['register','thumb'], tip:'Altissimo F#.'},
+  'G6':  {holes:['lh_index','lh_middle','lh_ring','rh_index','rh_middle','rh_ring'], reg:['register','thumb','Gs_key'], tip:'Altissimo G.'},
+  'Ab6': {holes:['lh_index','lh_middle','lh_ring'], reg:['register','thumb','Gs_key'], tip:'Altissimo Ab.'},
+  'A6':  {holes:['lh_index','lh_middle'], reg:['register','thumb'], tip:'Altissimo A.'},
+  'Bb6': {holes:['lh_index'], reg:['register','thumb','A_key'], tip:'Altissimo Bb.'},
+  'B6':  {holes:['lh_index'], reg:['register','thumb'], tip:'Altissimo B.'},
+  'C7':  {holes:[], reg:['register','thumb'], tip:'Altissimo C — very high, use carefully.'},
+};
+
+/* Sounding pitch (Bb clarinet sounds a M2 higher) */
+const SOUNDS = {
+  'E3':'F#3','F3':'G3','Gb3':'Ab3','G3':'A3','Ab3':'Bb3','A3':'B3','Bb3':'C4','B3':'C#4',
+  'C4':'D4','Db4':'Eb4','D4':'E4','Eb4':'F4','E4':'F#4','F4':'G4','Gb4':'Ab4','G4':'A4',
+  'Ab4':'Bb4','A4':'B4','Bb4':'C5','B4':'C#5','C5':'D5','Db5':'Eb5','D5':'E5','Eb5':'F5',
+  'E5':'F#5','F5':'G5','Gb5':'Ab5','G5':'A5','Ab5':'Bb5','A5':'B5','Bb5':'C6','B5':'C#6',
+  'C6':'D6','Db6':'Eb6','D6':'E6','Eb6':'F6','E6':'F#6','F6':'G6','Gb6':'Ab6','G6':'A6',
+  'Ab6':'Bb6','A6':'B6','Bb6':'C7','B6':'C#7','C7':'D7'
+};
+
+const ENH = {
+  'C#3':'Db3','D#3':'Eb3','F#3':'Gb3','G#3':'Ab3','A#3':'Bb3',
+  'C#4':'Db4','D#4':'Eb4','F#4':'Gb4','G#4':'Ab4','A#4':'Bb4',
+  'C#5':'Db5','D#5':'Eb5','F#5':'Gb5','G#5':'Ab5','A#5':'Bb5',
+  'C#6':'Db6','D#6':'Eb6','F#6':'Gb6','G#6':'Ab6','A#6':'Bb6',
+};
+
+/* Full keyboard C2–C7 */
+const ALL_WHITES = [];
+const ALL_BLACKS = [];
+const OCTAVES = [2,3,4,5,6,7];
+const WHITE_NAMES = ['C','D','E','F','G','A','B'];
+const BLACK_MAP = {0:'Db',1:'Eb',3:'Gb',4:'Ab',5:'Bb'}; // index in white seq → flat name
+
+let wIdx = 0;
+OCTAVES.forEach(oct => {
+  WHITE_NAMES.forEach((name, i) => {
+    if(oct === 7 && i > 0) return; // stop at C7
+    ALL_WHITES.push(name + oct);
+    if(BLACK_MAP[i] !== undefined) {
+      if(!(oct === 7)) {
+        const nextOct = (i >= 5) ? oct+1 : oct;
+        ALL_BLACKS.push({n: BLACK_MAP[i] + (i >= 5 ? nextOct : oct), wpos: wIdx});
+      }
+    }
+    wIdx++;
+  });
+});
+
+const CLARINET_RANGE = new Set(Object.keys(FINGERINGS));
+function inRange(note) {
+  const n = ENH[note] || note;
+  // E3 is the lowest written note
+  return CLARINET_RANGE.has(n);
+}
+
+const kb = document.getElementById('keyboard');
+let activeKey = null;
+let holeEls = {};
+
+const WK = 28; // white key width px
+
+ALL_WHITES.forEach((n, i) => {
+  const k = document.createElement('div');
+  const nr = inRange(n);
+  k.className = 'wk' + (nr ? '' : ' out-of-range');
+  k.dataset.note = n;
+  const lb = document.createElement('div'); lb.className = 'lbl';
+  lb.textContent = n;
+  k.appendChild(lb);
+  if(nr) k.addEventListener('click', () => pick(n, k));
+  kb.appendChild(k);
+});
+
+ALL_BLACKS.forEach(({n, wpos}) => {
+  const k = document.createElement('div');
+  const nr = inRange(n);
+  k.className = 'bk' + (nr ? '' : ' out-of-range');
+  k.dataset.note = n;
+  k.style.left = (wpos * WK + WK - 9) + 'px';
+  if(nr) k.addEventListener('click', e => { e.stopPropagation(); pick(n, k); });
+  kb.appendChild(k);
+});
+
+// Scroll keyboard to show E3 area on load
+window.addEventListener('load', () => {
+  const e3idx = ALL_WHITES.indexOf('E3');
+  document.querySelector('.kb-scroll').scrollLeft = Math.max(0, e3idx * WK - 20);
+});
+
+/* ── OVERLAY ── */
+function buildOverlay() {
+  const wrap = document.getElementById('cwrap');
+  const img  = document.getElementById('cimg');
+  wrap.querySelectorAll('.hole').forEach(e => e.remove());
+  holeEls = {};
+  const iw = img.offsetWidth, ih = img.offsetHeight;
+  if(!iw || !ih) return;
+  Object.entries(HOLES).forEach(([id, h]) => {
+    const el = document.createElement('div');
+    el.className = 'hole ' + h.type;
+    el.style.left = (h.lx / 100 * iw) + 'px';
+    el.style.top  = (h.ty / 100 * ih) + 'px';
+    const sz = Math.max(Math.round(h.sw / 100 * iw), 8);
+    el.style.width = sz + 'px';
+    el.style.height = sz + 'px';
+    wrap.appendChild(el);
+    holeEls[id] = el;
+  });
+}
+
+function clearHoles() { Object.values(holeEls).forEach(e => e.classList.remove('active')); }
+
+function pick(rawNote, keyEl) {
+  const note = ENH[rawNote] || rawNote;
+  if(activeKey) activeKey.classList.remove('active');
+  keyEl.classList.add('active');
+  activeKey = keyEl;
+  clearHoles();
+
+  const f = FINGERINGS[note];
+  if(!f) return;
+
+  f.holes.forEach(id => { if(holeEls[id]) holeEls[id].classList.add('active'); });
+  f.reg.forEach(id   => { if(holeEls[id]) holeEls[id].classList.add('active'); });
+
+  document.getElementById('note-box').innerHTML = `
+    <div class="pitch">${note}</div>
+    <div class="note-meta">
+      <div class="sounds">Sounds as <em>${SOUNDS[note] || '?'}</em> on Bb clarinet</div>
+    </div>
+  `;
+
+  const all = [
+    ...f.reg.map(id => ({label:HOLES[id]?.label, type:'special'})),
+    ...f.holes.map(id => ({label:HOLES[id]?.label, type:'finger'}))
+  ].filter(x => x.label);
+
+  const ba = document.getElementById('badges-area');
+  ba.style.display = 'block';
+  document.getElementById('badges').innerHTML = all.map(x =>
+    `<span class="badge ${x.type}">${x.label}</span>`
+  ).join('');
+
+  const tipEl = document.getElementById('tip');
+  if(f.tip){ tipEl.textContent = f.tip; tipEl.style.display = 'block'; }
+  else { tipEl.style.display = 'none'; }
+}
+
+const img = document.getElementById('cimg');
+if(img.complete && img.naturalHeight) buildOverlay();
+else img.addEventListener('load', buildOverlay);
+
+let rt;
+window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(buildOverlay, 40); });
+</script>
+</body>
+</html>
