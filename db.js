@@ -144,9 +144,7 @@ function deleteUser(id) {
   db.prepare('DELETE FROM users WHERE id = ?').run(id);
 }
 
-function addPage({ name, path, description }) {
-  return db.prepare('INSERT OR IGNORE INTO pages (name, path, description) VALUES (?, ?, ?)').run(name, path, description);
-}
+insertPage.run('Clarinet to Keyboard', '/clarinet-to-keyboard', 'Clarinet fingering guide');
 
 function updatePageAccess(userId, pageIds) {
   db.prepare('DELETE FROM user_page_access WHERE user_id = ?').run(userId);
