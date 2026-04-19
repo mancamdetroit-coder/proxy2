@@ -20,6 +20,11 @@ router.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
+// Clarinet to Keyboard — protected by page access
+router.use('/clarinet-to-keyboard', requirePageAccess('/clarinet-to-keyboard'), (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/clarinet-to-keyboard/index.html'));
+});
+
 // Catch-all
 router.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
